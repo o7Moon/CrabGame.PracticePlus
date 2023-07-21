@@ -38,5 +38,8 @@
     <Reference Include="UnityEngine.PhysicsModule">
       <HintPath>..\Bepinex\unhollowed\UnityEngine.PhysicsModule.dll</HintPath>
     </Reference>
+    <Reference Include="TextMeshPro">
+      <HintPath>..\Assemblies\Unity.TextMeshPro.dll</HintPath>
+    </Reference>
   </ItemGroup>
 </Project>

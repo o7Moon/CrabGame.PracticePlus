@@ -5,6 +5,7 @@ using HarmonyLib;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.Events;
+using TMPro;
 using Il2CppSystem;
 
 namespace practicePlus
@@ -18,6 +19,8 @@ namespace practicePlus
         public static ConfigEntry<KeyCode> save_bind;
         public static ConfigEntry<KeyCode> load_bind;
         public static ConfigEntry<bool> disable_player_collision;
+        
+        public static ConfigEntry<bool> shift_on_load;
         public override void Load()
         {
             Harmony.CreateAndPatchAll(typeof(Plugin));
@@ -25,6 +28,7 @@ namespace practicePlus
 
             save_bind = Config.Bind<KeyCode>("Keys","Save Position",KeyCode.Q,"the key used for setting a savestate");
             load_bind = Config.Bind<KeyCode>("Keys","Load Position",KeyCode.Mouse0,"the key used for teleporting to the current savestate");
+            shift_on_load = Config.Bind<bool>("Keys","Shift Load Modifier", true, "if true, must also hold shift to load position");
             disable_player_collision = Config.Bind<bool>("Settings","Disable Player Collision",true,"if true, disables collision with other players in practice.");
 
             SceneManager.sceneLoaded += (UnityAction<Scene,LoadSceneMode>) onSceneLoad;
@@ -46,6 +50,8 @@ namespace practicePlus
         public static void playerUpdatePost(PlayerMovement __instance){
             if (!__instance.dead){
                 if (isPractice()){
+                    // dont register keybinds when typing in chat
+                    if (ChatBox.Instance.transform.GetChild(0).GetChild(1).GetComponent<TMP_InputField>().isFocused) return;
                     if (Input.GetKeyDown(save_bind.Value)){
                         Rigidbody rb =  __instance.GetComponent<Rigidbody>();
                         saved_pos = rb.position;
@@ -53,7 +59,7 @@ namespace practicePlus
                         PlayerInput input = __instance.GetComponent<PlayerInput>();
                         saved_rot = new Vector2(input.playerCam.rotation.eulerAngles.y,input.GetMouseOffset());
                     }
-                    if (Input.GetKeyDown(load_bind.Value)){
+                    if ((!shift_on_load.Value || Input.GetKey(KeyCode.RightShift) || Input.GetKey(KeyCode.LeftShift)) && Input.GetKeyDown(load_bind.Value)){
                         Rigidbody rb =  __instance.GetComponent<Rigidbody>();
                         
                         PlayerInput input = __instance.GetComponent<PlayerInput>();
@@ -82,6 +88,7 @@ namespace practicePlus
             foreach (Collider c in __instance.gameObject.GetComponentsInChildren<Collider>()){
                 c.enabled = false;
                 c.isTrigger = true;// hacky solution to the game reenabling certain coliders every frame
+                c.gameObject.layer = 4; // even hackier solution (set collision layer to water)
             }
         }
 
