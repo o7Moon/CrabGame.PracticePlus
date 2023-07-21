@@ -80,7 +80,8 @@ namespace practicePlus
             if (!isPractice()) return;
 
             foreach (Collider c in __instance.gameObject.GetComponentsInChildren<Collider>()){
-                MonoBehaviour.Destroy(c);
+                c.enabled = false;
+                c.isTrigger = true;// hacky solution to the game reenabling certain coliders every frame
             }
         }
 
