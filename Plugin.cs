@@ -15,16 +15,16 @@ namespace practicePlus
         public static Vector3 saved_pos;
         public static Vector3 saved_velocity;
         public static Vector2 saved_rot;
-        public static ConfigEntry<string> save_bind;
-        public static ConfigEntry<string> load_bind;
+        public static ConfigEntry<KeyCode> save_bind;
+        public static ConfigEntry<KeyCode> load_bind;
         public static ConfigEntry<bool> disable_player_collision;
         public override void Load()
         {
             Harmony.CreateAndPatchAll(typeof(Plugin));
             Harmony.CreateAndPatchAll(typeof(patch2));
 
-            save_bind = Config.Bind<string>("Keys","Save Position","q","the key used for setting a savestate");
-            load_bind = Config.Bind<string>("Keys","Load Position","mouse0","they key used for teleporting to the current savestate");
+            save_bind = Config.Bind<KeyCode>("Keys","Save Position",KeyCode.Q,"the key used for setting a savestate");
+            load_bind = Config.Bind<KeyCode>("Keys","Load Position",KeyCode.Mouse0,"the key used for teleporting to the current savestate");
             disable_player_collision = Config.Bind<bool>("Settings","Disable Player Collision",true,"if true, disables collision with other players in practice.");
 
             SceneManager.sceneLoaded += (UnityAction<Scene,LoadSceneMode>) onSceneLoad;
