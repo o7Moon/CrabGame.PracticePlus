@@ -86,9 +86,8 @@ namespace practicePlus
             if (!isPractice()) return;
 
             foreach (Collider c in __instance.gameObject.GetComponentsInChildren<Collider>()){
-                c.enabled = false;
-                c.isTrigger = true;// hacky solution to the game reenabling certain coliders every frame
-                c.gameObject.layer = 4; // even hackier solution (set collision layer to water)
+                if (c.gameObject.layer == 6)// if this collider is ground layer
+                    c.gameObject.layer = 4; // HACK (set collision layer to water)
             }
         }
 
