@@ -19,6 +19,7 @@ namespace practicePlus
         public static ConfigEntry<KeyCode> save_bind;
         public static ConfigEntry<KeyCode> load_bind;
         public static ConfigEntry<bool> disable_player_collision;
+        public static ConfigEntry<bool> hide_status;
         
         public static ConfigEntry<bool> shift_on_load;
         public override void Load()
@@ -30,6 +31,7 @@ namespace practicePlus
             load_bind = Config.Bind<KeyCode>("Keys","Load Position",KeyCode.Mouse0,"the key used for teleporting to the current savestate");
             shift_on_load = Config.Bind<bool>("Keys","Shift Load Modifier", true, "if true, must also hold shift to load position");
             disable_player_collision = Config.Bind<bool>("Settings","Disable Player Collision",true,"if true, disables collision with other players in practice.");
+            hide_status = Config.Bind<bool>("Settings","Disable status UI", false, "if true, the status ui (player count, health) is hidden in practice.");
 
             SceneManager.sceneLoaded += (UnityAction<Scene,LoadSceneMode>) onSceneLoad;
 
@@ -63,7 +65,6 @@ namespace practicePlus
                         Rigidbody rb =  __instance.GetComponent<Rigidbody>();
                         
                         PlayerInput input = __instance.GetComponent<PlayerInput>();
-                        //Debug.Log(saved_rot.ToString());
                         input.desiredX = saved_rot.x;
                         input.SetMouseOffset(saved_rot.y);
                         input.cameraRot = new Vector3(saved_rot.y,saved_rot.x,input.actualWallRotation);
@@ -76,6 +77,16 @@ namespace practicePlus
             }
         }
 
+        [HarmonyPatch(typeof(GameUI), nameof(GameUI.Start))]
+        [HarmonyPostfix]
+        public static void onUiStart(GameUI __instance) {
+            if (!isPractice()) return;
+            if (!hide_status.Value) return;
+
+            Transform s = __instance.transform.FindChild("Status");
+            if (s != null) s.gameObject.SetActive(false);
+        }
+
         [HarmonyPatch(typeof(PlayerManager),nameof(PlayerManager.Awake))]
         [HarmonyPrefix]
         public static void onPlayerAwake(PlayerManager __instance){
@@ -85,9 +96,12 @@ namespace practicePlus
             if (!disable_player_collision.Value) return;
             if (!isPractice()) return;
 
+            // exclude all of this player's colliders from interacting with all of the client player's colliders.
+            // this is a very questionable way of doing this but its the only way that doesnt break nametags.
             foreach (Collider c in __instance.gameObject.GetComponentsInChildren<Collider>()){
-                if (c.gameObject.layer == 6)// if this collider is ground layer
-                    c.gameObject.layer = 4; // HACK (set collision layer to water)
+                foreach (Collider l in PlayerInput.Instance.gameObject.GetComponentsInChildren<Collider>()) {
+                    Physics.IgnoreCollision(c, l, true);
+                }
             }
         }
 
@@ -99,6 +113,11 @@ namespace practicePlus
         [HarmonyPatch(typeof(MonoBehaviourPublicObjomaOblogaTMObseprUnique), "Method_Public_Void_PDM_2")]
         [HarmonyPatch(typeof(MonoBehaviourPublicTeplUnique), "Method_Private_Void_PDM_32")]
         static class patch2{
+            [HarmonyPatch(typeof(MonoBehaviourPublicGataInefObInUnique), "Method_Private_Void_GameObject_Boolean_Vector3_Quaternion_0")]
+            [HarmonyPatch(typeof(MonoBehaviourPublicCSDi2UIInstObUIloDiUnique), "Method_Private_Void_0")]
+            [HarmonyPatch(typeof(MonoBehaviourPublicVesnUnique), "Method_Private_Void_0")]
+            [HarmonyPatch(typeof(MonoBehaviourPublicObjomaOblogaTMObseprUnique), "Method_Public_Void_PDM_2")]
+            [HarmonyPatch(typeof(MonoBehaviourPublicTeplUnique), "Method_Private_Void_PDM_32")]
             [HarmonyPrefix]
             public static bool Detect(System.Reflection.MethodBase __originalMethod)
             {
